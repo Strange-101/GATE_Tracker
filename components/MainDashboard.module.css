@@ -1,0 +1,236 @@
+.main {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.chartSection {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  padding: 1.5rem;
+}
+
+.chartHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.chartHeader h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.chartLegend {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.dot {
+  display: flex;
+  align-items: center;
+}
+
+.dot::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+  background-color: var(--dot-color);
+}
+
+.bottomGrid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.notesPanel, .engagementPanel, .lecturePanel {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.panelHeader h3 {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.panelTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.notesEditorContainer {
+  margin-top: 1rem;
+}
+
+
+.noteCard {
+  background-color: var(--bg-main);
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  transition: transform 0.2s ease;
+  cursor: pointer;
+}
+
+.noteCard:hover {
+  transform: translateY(-2px);
+  border-color: var(--text-muted);
+}
+
+.noteCard h4 {
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+.noteCard p {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.75rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.noteCard span {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.engagementContent {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.circularStat {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 6px solid var(--bg-main);
+  border-top-color: var(--accent-cyan);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.statInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.statValue {
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.statLabel {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+}
+
+.statBars {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.statRow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.75rem;
+}
+
+.miniProgress {
+  flex: 1;
+  height: 6px;
+  background-color: var(--bg-main);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.fill {
+  height: 100%;
+}
+
+.lectureContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  text-align: center;
+}
+
+.circularStatSmall {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 4px solid var(--bg-main);
+  border-top-color: var(--accent-pink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.smallStatValue {
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.lectureInfo p {
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.lectureInfo span {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.taskListMini {
+  width: 100%;
+}
+
+.taskMini {
+  background: var(--bg-main);
+  padding: 0.75rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  margin-bottom: 0.75rem;
+  text-align: left;
+  width: 100%;
+}
+
+.taskMiniTitle {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.taskMiniMeta {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
