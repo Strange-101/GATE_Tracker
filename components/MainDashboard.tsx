@@ -15,6 +15,8 @@ import { FileText, Video, Clock } from 'lucide-react';
 
 import { useApp } from '@/lib/store';
 import NotesEditor from './NotesEditor';
+import SubjectsList from './SubjectsList';
+import SubjectDetail from './SubjectDetail';
 
 const data = [
   { name: 'Week 1', ds: 20, os: 10, cn: 5, coa: 0, toc: 0, cd: 0 },
@@ -26,7 +28,7 @@ const data = [
 ];
 
 const MainDashboard = () => {
-  const { subjects, tasks, overallProgress } = useApp();
+  const { subjects, tasks, overallProgress, view } = useApp();
   const [notesContent, setNotesContent] = useState<string>('');
 
   // Load saved notes from localStorage on mount
@@ -41,6 +43,14 @@ const MainDashboard = () => {
   useEffect(() => {
     localStorage.setItem('notesContent', notesContent);
   }, [notesContent]);
+
+  if (view === 'subjects') {
+    return <main className={styles.main}><SubjectsList /></main>;
+  }
+
+  if (view === 'subjectDetail') {
+    return <main className={styles.main}><SubjectDetail /></main>;
+  }
 
   return (
     <main className={styles.main}>

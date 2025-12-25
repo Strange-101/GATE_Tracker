@@ -3,12 +3,16 @@
 import React from 'react';
 import styles from './Header.module.css';
 import { Search, Plus, Book, FileText, Video } from 'lucide-react';
+import { useApp } from '@/lib/store';
 
 const Header = () => {
+  const { view } = useApp();
+  const title = view === 'dashboard' ? 'Dashboard' : view === 'subjects' ? 'Subjects' : 'Subject Detail';
+
   return (
     <header className={styles.header}>
       <div className={styles.left}>
-        <h1 className={styles.title}>Dashboard</h1>
+        <h1 className={styles.title}>{title}</h1>
         <div className={styles.yearSelector}>
           <select>
             <option>GATE 2025</option>

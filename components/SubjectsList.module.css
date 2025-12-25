@@ -1,0 +1,17 @@
+.container {
+  padding: 20px;
+}
+.headerRow {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:12px;
+}
+.grid {
+  display:grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap:12px;
+}
+.globalBar {
+  margin-top:10px;
+}

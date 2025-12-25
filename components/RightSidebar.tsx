@@ -4,17 +4,21 @@ import React from 'react';
 import styles from './RightSidebar.module.css';
 import { useApp } from '@/lib/store';
 import { ChevronDown, CheckCircle2, Circle, AlertCircle } from 'lucide-react';
+import ProgressBar from './ProgressBar';
 
 const RightSidebar = () => {
-  const { subjects, tasks, toggleSubtopic } = useApp();
+  const { subjects, tasks, toggleSubtopic, overallProgress } = useApp();
 
   return (
     <aside className={styles.rightSidebar}>
       <div className={styles.section}>
-        <div className={styles.sectionHeader}>
-          <h3>Topic Checklist</h3>
-          <span className={styles.count}>82%</span>
-        </div>
+          <div className={styles.sectionHeader}>
+            <h3>Topic Checklist</h3>
+            <div style={{display:'flex', alignItems:'center', gap:8}}>
+              <div className={styles.count}>{overallProgress}%</div>
+              <div style={{width:120}}><ProgressBar value={overallProgress} /></div>
+            </div>
+          </div>
         
         <div className={styles.syllabusList}>
           {subjects.map((subject: any) => (
@@ -22,6 +26,12 @@ const RightSidebar = () => {
               <div className={styles.subjectHeader}>
                 <ChevronDown size={14} />
                 <span>{subject.name}</span>
+                <span style={{marginLeft:'auto', fontSize:12, color:'var(--text-muted)'}}>
+                  {(() => {
+                    let t=0,c=0; subject.topics.forEach((topic:any)=> topic.subtopics.forEach((st:any)=>{t++; if(st.completed) c++}))
+                    return `${c}/${t}`;
+                  })()}
+                </span>
               </div>
               <div className={styles.topics}>
                 {subject.topics.map((topic: any) => (
