@@ -14,15 +14,15 @@ import {
 import StudyTimer from './StudyTimer';
 
 const Sidebar = () => {
-  const { overallProgress } = useApp();
+  const { overallProgress, view, setView } = useApp();
   
   const navItems = [
-    { icon: <LayoutDashboard size={20} />, label: 'Dashboard', active: true },
-    { icon: <BookOpen size={20} />, label: 'Subjects' },
-    { icon: <FileText size={20} />, label: 'Notes' },
-    { icon: <Video size={20} />, label: 'Lectures' },
-    { icon: <CheckSquare size={20} />, label: 'Tasks' },
-    { icon: <Settings size={20} />, label: 'Settings' },
+    { key: 'dashboard', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
+    { key: 'subjects', icon: <BookOpen size={20} />, label: 'Subjects' },
+    { key: 'notes', icon: <FileText size={20} />, label: 'Notes' },
+    { key: 'lectures', icon: <Video size={20} />, label: 'Lectures' },
+    { key: 'tasks', icon: <CheckSquare size={20} />, label: 'Tasks' },
+    { key: 'settings', icon: <Settings size={20} />, label: 'Settings' },
   ];
 
   // Circle math
@@ -75,8 +75,11 @@ const Sidebar = () => {
       </div>
 
       <nav className={styles.nav}>
-        {navItems.map((item, index) => (
-          <button key={index} className={`${styles.navItem} ${item.active ? styles.active : ''}`}>
+        {navItems.map((item) => (
+          <button
+            key={item.key}
+            onClick={() => item.key === 'subjects' ? setView('subjects') : setView('dashboard')}
+            className={`${styles.navItem} ${((item.key === 'subjects' && view === 'subjects') || (item.key === 'dashboard' && view === 'dashboard')) ? styles.active : ''}`}>
             {item.icon}
             <span>{item.label}</span>
           </button>

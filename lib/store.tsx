@@ -10,6 +10,11 @@ interface AppContextType {
   studyTime: number; // in seconds
   addStudyTime: (seconds: number) => void;
   toggleSubtopic: (subjectId: string, topicId: string, subtopicId: string) => void;
+  // navigation state
+  view: 'dashboard' | 'subjects' | 'subjectDetail';
+  setView: (v: 'dashboard' | 'subjects' | 'subjectDetail') => void;
+  selectedSubjectId?: string | null;
+  selectSubject: (id: string | null) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -17,33 +22,6 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [subjects, setSubjects] = useState<Subject[]>(SYLLABUS);
   const [tasks, setTasks] = useState(MOCK_TASKS);
-  const [overallProgress, setOverallProgress] = useState(10);
-  const [studyTime, setStudyTime] = useState(0);
-
-  // Load state
-  useEffect(() => {
-    const saved = localStorage.getItem('gate_dashboard_data');
-    if (saved) {
-      try {
-        const { subjects: s, overallProgress: op, studyTime: st } = JSON.parse(saved);
-        setSubjects(s);
-        setOverallProgress(op);
-        if (st) setStudyTime(st);
-      } catch (e) {
-        console.error('Failed to load state', e);
-      }
-    }
-  }, []);
-
-  // Save state
-  useEffect(() => {
-    localStorage.setItem('gate_dashboard_data', JSON.stringify({ subjects, overallProgress, studyTime }));
-  }, [subjects, overallProgress, studyTime]);
-
-  const addStudyTime = (seconds: number) => {
-    setStudyTime(prev => prev + seconds);
-  };
-
   const calculateProgress = (currentSubjects: Subject[]) => {
     let total = 0;
     let completed = 0;
@@ -55,8 +33,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         });
       });
     });
-    return Math.round((completed / total) * 100);
+    return total === 0 ? 0 : Math.round((completed / total) * 100);
   };
+
+  const [overallProgress, setOverallProgress] = useState<number>(() => calculateProgress(SYLLABUS));
+  const [studyTime, setStudyTime] = useState(0);
+  const [view, setView] = useState<'dashboard' | 'subjects' | 'subjectDetail'>('dashboard');
+  const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
+
+  // Note: persistence (localStorage) intentionally disabled per feature requirements.
+
+  const addStudyTime = (seconds: number) => {
+    setStudyTime(prev => prev + seconds);
+  };
+
+  const selectSubject = (id: string | null) => {
+    setSelectedSubjectId(id);
+    if (id) setView('subjectDetail');
+    else setView('subjects');
+  };
+
+  
 
   const toggleSubtopic = (subjectId: string, topicId: string, subtopicId: string) => {
     setSubjects(prev => {
@@ -82,7 +79,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   return (
-    <AppContext.Provider value={{ subjects, tasks, overallProgress, studyTime, addStudyTime, toggleSubtopic }}>
+    <AppContext.Provider value={{ subjects, tasks, overallProgress, studyTime, addStudyTime, toggleSubtopic, view, setView, selectedSubjectId, selectSubject }}>
       {children}
     </AppContext.Provider>
   );
