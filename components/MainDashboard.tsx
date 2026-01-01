@@ -21,18 +21,12 @@ import NotesView from './NotesView';
 import SubjectNotesView from './SubjectNotesView';
 import LecturesView from './LecturesView';
 import SubjectLecturesView from './SubjectLecturesView';
+import ConsistencyTrackingView from './ConsistencyTrackingView';
 
-const data = [
-  { name: 'Week 1', ds: 20, os: 10, cn: 5, coa: 0, toc: 0, cd: 0 },
-  { name: 'Week 2', ds: 35, os: 20, cn: 15, coa: 5, toc: 0, cd: 0 },
-  { name: 'Week 3', ds: 50, os: 35, cn: 25, coa: 15, toc: 5, cd: 0 },
-  { name: 'Week 4', ds: 60, os: 45, cn: 35, coa: 25, toc: 15, cd: 5 },
-  { name: 'Week 5', ds: 75, os: 55, cn: 45, coa: 35, toc: 25, cd: 15 },
-  { name: 'Week 6', ds: 85, os: 65, cn: 55, coa: 45, toc: 35, cd: 25 },
-];
+// Static data removed for dynamic generation
 
 const MainDashboard = () => {
-  const { subjects, tasks, overallProgress, view, selectSubject } = useApp();
+  const { subjects, tasks, overallProgress, view, selectSubject, studyLogs } = useApp();
   
   // Aggregate all notes (links) and PDFs from all subjects/topics/subtopics
   const allResources = React.useMemo(() => {
@@ -90,6 +84,35 @@ const MainDashboard = () => {
     return resources.sort((a, b) => Number(b.id) - Number(a.id)); // Newest first (assuming ID is timestamp)
   }, [subjects]);
 
+  // Generate chart data based on study logs
+  const chartData = React.useMemo(() => {
+    // Generate last 7 days
+    const days = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - (6 - i));
+      return d.toISOString().split('T')[0];
+    });
+
+    const timeline = days.map(day => {
+      const dataPoint: any = { name: new Date(day).toLocaleDateString('en-IN', { weekday: 'short' }) };
+      
+      subjects.forEach(s => {
+        // Find logs for this subject on or before this day
+        // (Cumulative display makes it look like progress)
+        const count = studyLogs.filter(log => {
+          const logDay = log.date.split('T')[0];
+          return log.subjectId === s.id && logDay <= day;
+        }).length;
+        
+        dataPoint[s.id] = count;
+      });
+      
+      return dataPoint;
+    });
+
+    return timeline;
+  }, [studyLogs, subjects]);
+
   if (view === 'subjects') {
     return <main className={styles.main}><SubjectsList /></main>;
   }
@@ -114,6 +137,10 @@ const MainDashboard = () => {
     return <main className={styles.main}><SubjectLecturesView /></main>;
   }
 
+  if (view === 'tracking') {
+    return <main className={styles.main}><ConsistencyTrackingView /></main>;
+  }
+
   return (
     <main className={styles.main}>
       <div className={styles.chartSection}>
@@ -121,14 +148,16 @@ const MainDashboard = () => {
         <div className={styles.chartHeader}>
           <h3>Topic Progress Timeline</h3>
           <div className={styles.chartLegend}>
-            {subjects.map(s => (
-              <span key={s.id} className={styles.dot} style={{ '--dot-color': s.color } as any}>{s.name}</span>
-            ))}
+            {subjects
+              .filter(s => studyLogs.some(log => log.subjectId === s.id))
+              .map(s => (
+                <span key={s.id} className={styles.dot} style={{ '--dot-color': s.color } as any}>{s.name}</span>
+              ))}
           </div>
         </div>
         <div className={styles.chartContainer}>
           <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={data}>
+            <AreaChart data={chartData}>
               <defs>
                 {subjects.map(s => (
                   <linearGradient key={s.id} id={`color${s.id}`} x1="0" y1="0" x2="0" y2="1">
@@ -198,20 +227,52 @@ const MainDashboard = () => {
              <h3>Consistency Tracking</h3>
           </div>
           <div className={styles.engagementContent}>
-            <div className={styles.circularStat}>
-              <div className={styles.statInfo}>
-                <span className={styles.statValue}>{overallProgress}%</span>
-                <span className={styles.statLabel}>Engaged</span>
+            {studyLogs.length > 0 ? (
+              <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {subjects.map(s => {
+                  const subjectLogs = studyLogs.filter(log => log.subjectId === s.id);
+                  const count = subjectLogs.length;
+                  const maxLogs = Math.max(...subjects.map(sub => studyLogs.filter(l => l.subjectId === sub.id).length), 1);
+                  const percent = (count / maxLogs) * 100;
+
+                  return (
+                    <div key={s.id} className={styles.statRow} style={{ opacity: count > 0 ? 1 : 0.5 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', width: '100%' }}>
+                        <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>{s.name}</span>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{count} sessions</span>
+                      </div>
+                      <div className={styles.miniProgress}>
+                        <div 
+                          className={styles.fill} 
+                          style={{ 
+                            width: `${Math.max(percent, 2)}%`, 
+                            background: s.color,
+                            boxShadow: `0 0 8px ${s.color}44`
+                          }}
+                        ></div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            </div>
-            <div className={styles.statBars}>
-              {subjects.map(s => (
-                <div key={s.id} className={styles.statRow}>
-                  <span>{s.id.toUpperCase()}</span>
-                  <div className={styles.miniProgress}><div className={styles.fill} style={{width: '60%', background: s.color}}></div></div>
+            ) : (
+              <>
+                <div className={styles.circularStat}>
+                  <div className={styles.statInfo}>
+                    <span className={styles.statValue}>{overallProgress}%</span>
+                    <span className={styles.statLabel}>Engaged</span>
+                  </div>
                 </div>
-              ))}
-            </div>
+                <div className={styles.statBars}>
+                  {subjects.slice(0, 4).map(s => (
+                    <div key={s.id} className={styles.statRow}>
+                      <span>{s.id.toUpperCase()}</span>
+                      <div className={styles.miniProgress}><div className={styles.fill} style={{width: '60%', background: s.color}}></div></div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </div>
 

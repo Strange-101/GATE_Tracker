@@ -9,7 +9,8 @@ import {
   FileText, 
   Video, 
   CheckSquare, 
-  Settings 
+  Settings,
+  Calendar
 } from 'lucide-react';
 import StudyTimer from './StudyTimer';
 
@@ -21,6 +22,7 @@ const Sidebar = () => {
     { key: 'subjects', icon: <BookOpen size={20} />, label: 'Subjects' },
     { key: 'notes', icon: <FileText size={20} />, label: 'Notes' },
     { key: 'lectures', icon: <Video size={20} />, label: 'Lectures' },
+    { key: 'tracking', icon: <Calendar size={20} />, label: 'Consistency' },
     { key: 'tasks', icon: <CheckSquare size={20} />, label: 'Tasks' },
     { key: 'settings', icon: <Settings size={20} />, label: 'Settings' },
   ];
@@ -82,9 +84,10 @@ const Sidebar = () => {
               if (item.key === 'subjects') setView('subjects');
               else if (item.key === 'notes') setView('notes');
               else if (item.key === 'lectures') setView('lectures');
+              else if (item.key === 'tracking') setView('tracking');
               else setView('dashboard');
             }}
-            className={`${styles.navItem} ${((item.key === 'subjects' && view === 'subjects') || (item.key === 'dashboard' && view === 'dashboard') || (item.key === 'notes' && view === 'notes') || (item.key === 'lectures' && view === 'lectures')) ? styles.active : ''}`}>
+            className={`${styles.navItem} ${((item.key === 'subjects' && view === 'subjects') || (item.key === 'dashboard' && view === 'dashboard') || (item.key === 'notes' && view === 'notes') || (item.key === 'lectures' && view === 'lectures') || (item.key === 'tracking' && view === 'tracking')) ? styles.active : ''}`}>
             {item.icon}
             <span>{item.label}</span>
           </button>
