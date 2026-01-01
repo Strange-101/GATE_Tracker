@@ -22,6 +22,7 @@ interface AppContextType {
   addPDF: (subjectId: string, topicId: string, subtopicId: string, pdf: PDFFile) => void;
   deletePDF: (subjectId: string, topicId: string, subtopicId: string, pdfId: string) => void;
   setPdfLastOpened: (subjectId: string, topicId: string, subtopicId: string, pdfId: string, page: number) => void;
+  deleteSubtopic: (subjectId: string, topicId: string, subtopicId: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -185,6 +186,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const setPdfLastOpened = (subjectId: string, topicId: string, subtopicId: string, pdfId: string, page: number) => {
     setSubjects(prev => {
+      // Find the current PDF to check if the page actually changed
+      const subject = prev.find(s => s.id === subjectId);
+      const topic = subject?.topics.find(t => t.id === topicId);
+      const subtopic = topic?.subtopics.find(st => st.id === subtopicId);
+      const pdf = subtopic?.pdfs?.find(p => p.id === pdfId);
+
+      // If page hasn't changed, return previous state to avoid re-render
+      if (pdf?.lastOpenedPage === page) return prev;
+
       const next = prev.map(s => {
         if (s.id !== subjectId) return s;
         return {
@@ -206,7 +216,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
+
   
+
+  const deleteSubtopic = (subjectId: string, topicId: string, subtopicId: string) => {
+    setSubjects(prev => {
+      const next = prev.map(s => {
+        if (s.id !== subjectId) return s;
+        return {
+          ...s,
+          topics: s.topics.map(t => {
+            if (t.id !== topicId) return t;
+            return {
+              ...t,
+              subtopics: t.subtopics.filter(st => st.id !== subtopicId)
+            };
+          })
+        };
+      });
+      setOverallProgress(calculateProgress(next));
+      return next;
+    });
+  };
 
   const toggleSubtopic = (subjectId: string, topicId: string, subtopicId: string) => {
     setSubjects(prev => {
@@ -232,7 +263,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   return (
-    <AppContext.Provider value={{ subjects, tasks, overallProgress, studyTime, addStudyTime, toggleSubtopic, view, setView, selectedSubjectId, selectSubject, addTopic, addSubtopic, addLink, addPDF, deletePDF, setPdfLastOpened }}>
+    <AppContext.Provider value={{ subjects, tasks, overallProgress, studyTime, addStudyTime, toggleSubtopic, view, setView, selectedSubjectId, selectSubject, addTopic, addSubtopic, addLink, addPDF, deletePDF, setPdfLastOpened, deleteSubtopic }}>
       {children}
     </AppContext.Provider>
   );

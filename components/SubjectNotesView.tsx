@@ -4,9 +4,19 @@ import React, { useState } from 'react';
 import styles from './Notes.module.css';
 import { useApp } from '@/lib/store';
 import NotesModal from './NotesModal';
+import { 
+  ArrowLeft, 
+  Plus, 
+  ChevronRight, 
+  CheckCircle2, 
+  Clock, 
+  FileText,
+  Search,
+  Trash2
+} from 'lucide-react';
 
 const SubjectNotesView: React.FC = () => {
-  const { subjects, selectedSubjectId, selectSubject, addTopic, addSubtopic, toggleSubtopic } = useApp();
+  const { subjects, selectedSubjectId, selectSubject, addTopic, addSubtopic, toggleSubtopic, deleteSubtopic } = useApp();
   const subject = subjects.find(s => s.id === selectedSubjectId) || null;
   const [activeModal, setActiveModal] = useState<{ topicId: string; subtopicId: string } | null>(null);
   const [newTopic, setNewTopic] = useState('');
@@ -14,16 +24,39 @@ const SubjectNotesView: React.FC = () => {
 
   if (!subject) return <div>Subject not found</div>;
 
+  const handleDeleteSubtopic = (topicId: string, subtopicId: string, subtopicName: string) => {
+    if (confirm(`Are you sure you want to delete "${subtopicName}"?`)) {
+      deleteSubtopic(subject.id, topicId, subtopicId);
+    }
+  };
+
   return (
     <div className={styles.detailContainer}>
       <div className={styles.detailHeader}>
-        <button className={styles.backBtn} onClick={() => selectSubject(null, 'notes')}>Back</button>
-        <h2>{subject.name} — Notes</h2>
+        <button className={styles.backBtn} onClick={() => selectSubject(null, 'notes')}>
+          <ArrowLeft size={18} />
+          Back
+        </button>
+        <h2>{subject.name}</h2>
       </div>
 
       <div className={styles.actionsRow}>
-        <input placeholder="New topic name" value={newTopic} onChange={e => setNewTopic(e.target.value)} />
-        <button onClick={() => { if (newTopic.trim()) { addTopic(subject.id, newTopic.trim()); setNewTopic(''); } }}>Add Topic</button>
+        <div style={{ display: 'flex', flex: 1, gap: '0.75rem' }}>
+          <input 
+            className={styles.input}
+            style={{ flex: 1 }}
+            placeholder="New topic name..." 
+            value={newTopic} 
+            onChange={e => setNewTopic(e.target.value)} 
+          />
+          <button 
+            className={styles.addBtn}
+            onClick={() => { if (newTopic.trim()) { addTopic(subject.id, newTopic.trim()); setNewTopic(''); } }}
+          >
+            <Plus size={18} />
+            Add Topic
+          </button>
+        </div>
       </div>
 
       <div className={styles.topicsList}>
@@ -31,22 +64,50 @@ const SubjectNotesView: React.FC = () => {
           <div key={topic.id} className={styles.topicBlock}>
             <div className={styles.topicHeader}>
               <h3>{topic.name}</h3>
-              <div>
-                <button onClick={() => setNewSubtopicFor({ topicId: topic.id, name: '' })}>+ Subtopic</button>
-              </div>
+              <button 
+                className={styles.backBtn} 
+                style={{ padding: '0.4rem 0.75rem' }}
+                onClick={() => setNewSubtopicFor({ topicId: topic.id, name: '' })}
+              >
+                <Plus size={16} />
+                Subtopic
+              </button>
             </div>
 
             <div className={styles.subtopicsTable}>
               {topic.subtopics.map(st => {
                 const hasNotes = (st.links && st.links.length > 0) || (st.pdfs && st.pdfs.length > 0);
-                const status = st.completed ? '🟢' : hasNotes ? '🟡' : '⭕';
+                const statusClass = st.completed ? styles.statusGreen : hasNotes ? styles.statusYellow : styles.statusEmpty;
+                
                 return (
                   <div key={st.id} className={styles.subtopicRow}>
                     <div className={styles.subtopicName}>{st.name}</div>
-                    <div className={styles.subtopicStatus}>{status}</div>
+                    <div className={styles.subtopicStatus}>
+                      <div className={`${styles.statusDot} ${statusClass}`} />
+                    </div>
                     <div className={styles.subtopicActions}>
-                      <button onClick={() => setActiveModal({ topicId: topic.id, subtopicId: st.id })}>Notes</button>
-                      <button onClick={() => toggleSubtopic(subject.id, topic.id, st.id)}>{st.completed ? 'Unmark' : 'Complete'}</button>
+                      <button 
+                        className={styles.iconBtn}
+                        onClick={() => setActiveModal({ topicId: topic.id, subtopicId: st.id })}
+                        title="Notes & Resources"
+                      >
+                        <FileText size={18} />
+                      </button>
+                      <button 
+                        className={styles.iconBtn}
+                        style={{ color: st.completed ? 'var(--accent-green)' : 'var(--text-muted)' }}
+                        onClick={() => toggleSubtopic(subject.id, topic.id, st.id)}
+                        title={st.completed ? 'Mark Incomplete' : 'Mark Complete'}
+                      >
+                        <CheckCircle2 size={18} />
+                      </button>
+                      <button 
+                        className={`${styles.iconBtn} ${styles.deleteBtn}`}
+                        onClick={() => handleDeleteSubtopic(topic.id, st.id, st.name)}
+                        title="Delete Subtopic"
+                      >
+                        <Trash2 size={18} />
+                      </button>
                     </div>
                   </div>
                 );
@@ -55,12 +116,27 @@ const SubjectNotesView: React.FC = () => {
 
             {newSubtopicFor && newSubtopicFor.topicId === topic.id && (
               <div className={styles.newSubRow}>
-                <input placeholder="Subtopic name" value={newSubtopicFor.name} onChange={e => setNewSubtopicFor({ ...newSubtopicFor!, name: e.target.value })} />
-                <button onClick={() => { if (newSubtopicFor.name.trim()) { addSubtopic(subject.id, topic.id, newSubtopicFor.name.trim()); setNewSubtopicFor(null); } }}>Add</button>
-                <button onClick={() => setNewSubtopicFor(null)}>Cancel</button>
+                <input 
+                  className={styles.input}
+                  style={{ flex: 1 }}
+                  placeholder="Subtopic name..." 
+                  value={newSubtopicFor.name} 
+                  onChange={e => setNewSubtopicFor({ ...newSubtopicFor!, name: e.target.value })} 
+                />
+                <button 
+                  className={styles.addBtn}
+                  onClick={() => { if (newSubtopicFor.name.trim()) { addSubtopic(subject.id, topic.id, newSubtopicFor.name.trim()); setNewSubtopicFor(null); } }}
+                >
+                  Add
+                </button>
+                <button 
+                  className={styles.backBtn}
+                  onClick={() => setNewSubtopicFor(null)}
+                >
+                  Cancel
+                </button>
               </div>
             )}
-
           </div>
         ))}
       </div>
@@ -78,3 +154,4 @@ const SubjectNotesView: React.FC = () => {
 };
 
 export default SubjectNotesView;
+
