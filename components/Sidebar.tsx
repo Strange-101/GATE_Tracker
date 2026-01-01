@@ -81,9 +81,10 @@ const Sidebar = () => {
             onClick={() => {
               if (item.key === 'subjects') setView('subjects');
               else if (item.key === 'notes') setView('notes');
+              else if (item.key === 'lectures') setView('lectures');
               else setView('dashboard');
             }}
-            className={`${styles.navItem} ${((item.key === 'subjects' && view === 'subjects') || (item.key === 'dashboard' && view === 'dashboard') || (item.key === 'notes' && view === 'notes')) ? styles.active : ''}`}>
+            className={`${styles.navItem} ${((item.key === 'subjects' && view === 'subjects') || (item.key === 'dashboard' && view === 'dashboard') || (item.key === 'notes' && view === 'notes') || (item.key === 'lectures' && view === 'lectures')) ? styles.active : ''}`}>
             {item.icon}
             <span>{item.label}</span>
           </button>
