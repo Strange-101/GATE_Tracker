@@ -19,6 +19,8 @@ import SubjectsList from './SubjectsList';
 import SubjectDetail from './SubjectDetail';
 import NotesView from './NotesView';
 import SubjectNotesView from './SubjectNotesView';
+import LecturesView from './LecturesView';
+import SubjectLecturesView from './SubjectLecturesView';
 
 const data = [
   { name: 'Week 1', ds: 20, os: 10, cn: 5, coa: 0, toc: 0, cd: 0 },
@@ -60,6 +62,14 @@ const MainDashboard = () => {
 
   if (view === 'notesSubject') {
     return <main className={styles.main}><SubjectNotesView /></main>;
+  }
+
+  if (view === 'lectures') {
+    return <main className={styles.main}><LecturesView /></main>;
+  }
+
+  if (view === 'lecturesSubject') {
+    return <main className={styles.main}><SubjectLecturesView /></main>;
   }
 
   return (

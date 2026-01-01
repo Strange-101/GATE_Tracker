@@ -7,6 +7,7 @@ export interface Subtopic {
   revisionCount: number;
   links?: Link[];
   pdfs?: PDFFile[];
+  videos?: VideoFile[];
 }
 
 export interface Topic {
@@ -34,6 +35,13 @@ export interface PDFFile {
   name: string;
   dataUrl?: string; // base64 or object URL stored for persistence
   lastOpenedPage?: number;
+}
+
+export interface VideoFile {
+  id: string;
+  name: string;
+  url: string; // URL to video (YouTube, Drive, etc.) or local blob URL
+  type: 'Link' | 'File';
 }
 
 export const SYLLABUS: Subject[] = [
