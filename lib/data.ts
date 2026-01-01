@@ -28,6 +28,7 @@ export interface Link {
   title: string;
   url: string;
   type?: 'Lecture' | 'Blog' | 'Notes' | string;
+  lastAccessed?: number;
 }
 
 export interface PDFFile {
@@ -35,6 +36,7 @@ export interface PDFFile {
   name: string;
   dataUrl?: string; // base64 or object URL stored for persistence
   lastOpenedPage?: number;
+  lastAccessed?: number;
 }
 
 export interface VideoFile {
@@ -42,6 +44,19 @@ export interface VideoFile {
   name: string;
   url: string; // URL to video (YouTube, Drive, etc.) or local blob URL
   type: 'Link' | 'File';
+  lastAccessed?: number;
+}
+
+export interface StudyLog {
+  id: string;
+  date: string; // ISO string
+  subjectId: string;
+  subjectName: string;
+  topicId: string;
+  topicName: string;
+  subtopicId: string;
+  subtopicName: string;
+  notes?: string;
 }
 
 export const SYLLABUS: Subject[] = [

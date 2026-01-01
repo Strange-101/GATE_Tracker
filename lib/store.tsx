@@ -1,7 +1,7 @@
 "use client"
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Subject, SYLLABUS, MOCK_TASKS, Link, PDFFile, VideoFile } from './data';
+import { Subject, SYLLABUS, MOCK_TASKS, Link, PDFFile, VideoFile, StudyLog } from './data';
 
 interface AppContextType {
   subjects: Subject[];
@@ -11,8 +11,8 @@ interface AppContextType {
   addStudyTime: (seconds: number) => void;
   toggleSubtopic: (subjectId: string, topicId: string, subtopicId: string) => void;
   // navigation state
-  view: 'dashboard' | 'subjects' | 'subjectDetail' | 'notes' | 'notesSubject' | 'lectures' | 'lecturesSubject';
-  setView: (v: 'dashboard' | 'subjects' | 'subjectDetail' | 'notes' | 'notesSubject' | 'lectures' | 'lecturesSubject') => void;
+  view: 'dashboard' | 'subjects' | 'subjectDetail' | 'notes' | 'notesSubject' | 'lectures' | 'lecturesSubject' | 'tracking';
+  setView: (v: 'dashboard' | 'subjects' | 'subjectDetail' | 'notes' | 'notesSubject' | 'lectures' | 'lecturesSubject' | 'tracking') => void;
   selectedSubjectId?: string | null;
   selectSubject: (id: string | null, mode?: 'syllabus' | 'notes' | 'lectures') => void;
   // notes/topic modification
@@ -25,6 +25,9 @@ interface AppContextType {
   addVideo: (subjectId: string, topicId: string, subtopicId: string, video: VideoFile) => void;
   deleteVideo: (subjectId: string, topicId: string, subtopicId: string, videoId: string) => void;
   deleteSubtopic: (subjectId: string, topicId: string, subtopicId: string) => void;
+  studyLogs: StudyLog[];
+  addStudyLog: (log: Omit<StudyLog, 'id' | 'date'> & { date?: string }) => void;
+  deleteStudyLog: (id: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -48,8 +51,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [overallProgress, setOverallProgress] = useState<number>(() => calculateProgress(SYLLABUS));
   const [studyTime, setStudyTime] = useState(0);
-  const [view, setView] = useState<'dashboard' | 'subjects' | 'subjectDetail' | 'notes' | 'notesSubject' | 'lectures' | 'lecturesSubject'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'subjects' | 'subjectDetail' | 'notes' | 'notesSubject' | 'lectures' | 'lecturesSubject' | 'tracking'>('dashboard');
   const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
+  const [studyLogs, setStudyLogs] = useState<StudyLog[]>([]);
   // load persisted subjects (notes + user added content)
   useEffect(() => {
     try {
@@ -59,6 +63,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         // merge with default syllabus to ensure any missing fields exist
         setSubjects(parsed);
         setOverallProgress(calculateProgress(parsed));
+      }
+
+      const rawLogs = localStorage.getItem('app_study_logs_v1');
+      if (rawLogs) {
+        setStudyLogs(JSON.parse(rawLogs));
       }
     } catch (e) {
       // ignore
@@ -71,6 +80,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       localStorage.setItem('app_subjects_v1', JSON.stringify(subjects));
     } catch (e) {}
   }, [subjects]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('app_study_logs_v1', JSON.stringify(studyLogs));
+    } catch (e) {}
+  }, [studyLogs]);
 
   // Note: persistence (localStorage) intentionally disabled per feature requirements.
 
@@ -318,8 +333,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
+  const addStudyLog = (log: Omit<StudyLog, 'id' | 'date'> & { date?: string }) => {
+    const newLog: StudyLog = {
+      ...log,
+      id: Date.now().toString(),
+      date: log.date || new Date().toISOString()
+    };
+    setStudyLogs(prev => [newLog, ...prev]);
+  };
+
+  const deleteStudyLog = (id: string) => {
+    setStudyLogs(prev => prev.filter(log => log.id !== id));
+  };
+
   return (
-    <AppContext.Provider value={{ subjects, tasks, overallProgress, studyTime, addStudyTime, toggleSubtopic, view, setView, selectedSubjectId, selectSubject, addTopic, addSubtopic, addLink, addPDF, deletePDF, setPdfLastOpened, addVideo, deleteVideo, deleteSubtopic }}>
+    <AppContext.Provider value={{ subjects, tasks, overallProgress, studyTime, addStudyTime, toggleSubtopic, view, setView, selectedSubjectId, selectSubject, addTopic, addSubtopic, addLink, addPDF, deletePDF, setPdfLastOpened, addVideo, deleteVideo, deleteSubtopic, studyLogs, addStudyLog, deleteStudyLog }}>
       {children}
     </AppContext.Provider>
   );
