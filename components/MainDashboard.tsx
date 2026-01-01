@@ -17,6 +17,8 @@ import { useApp } from '@/lib/store';
 import NotesEditor from './NotesEditor';
 import SubjectsList from './SubjectsList';
 import SubjectDetail from './SubjectDetail';
+import NotesView from './NotesView';
+import SubjectNotesView from './SubjectNotesView';
 
 const data = [
   { name: 'Week 1', ds: 20, os: 10, cn: 5, coa: 0, toc: 0, cd: 0 },
@@ -50,6 +52,14 @@ const MainDashboard = () => {
 
   if (view === 'subjectDetail') {
     return <main className={styles.main}><SubjectDetail /></main>;
+  }
+
+  if (view === 'notes') {
+    return <main className={styles.main}><NotesView /></main>;
+  }
+
+  if (view === 'notesSubject') {
+    return <main className={styles.main}><SubjectNotesView /></main>;
   }
 
   return (

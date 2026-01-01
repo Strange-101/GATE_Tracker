@@ -1,0 +1,25 @@
+.container { padding: 20px; }
+.headerRow { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+.backBtn { background: transparent; border: 1px solid var(--border-color); padding:6px 10px; border-radius:6px; }
+.actionsRow { display:flex; gap:8px; margin-bottom:12px; }
+.topicsList { display:flex; flex-direction:column; gap:12px; }
+.topicBlock { border:1px solid var(--border-color); padding:12px; border-radius:8px; background:var(--bg-card); }
+.topicHeader { display:flex; justify-content:space-between; align-items:center; }
+.subtopicsTable { margin-top:8px; display:flex; flex-direction:column; gap:8px; }
+.subtopicRow { display:flex; align-items:center; gap:12px; justify-content:space-between; padding:6px 8px; border-radius:6px; }
+.subtopicName { flex:1; }
+.subtopicStatus { width:40px; text-align:center }
+.subtopicActions { display:flex; gap:8px; }
+.newSubRow { display:flex; gap:8px; margin-top:8px; }
+.modalBackdrop { position:fixed; inset:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:60; }
+.modalCard { width:min(1000px,95%); max-height:90vh; overflow:auto; background:var(--bg); border-radius:10px; padding:12px; border:1px solid var(--border-color); }
+.modalHeader { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+.modalBody { margin-top:12px; display:flex; flex-direction:column; gap:12px; }
+.formRow { display:flex; gap:8px; align-items:center; }
+.linkList, .pdfList { list-style:none; padding:0; margin:0; }
+.pdfRow { display:flex; justify-content:space-between; align-items:center; padding:6px 0; }
+.pdfViewerWrap { margin-top:12px; }
+.viewerContainer { border:1px solid var(--border-color); border-radius:8px; overflow:hidden; }
+.viewerToolbar { display:flex; gap:8px; align-items:center; padding:8px; background:var(--bg-card); }
+.viewerCanvasWrap { display:flex; justify-content:center; align-items:center; padding:8px; background:var(--bg); }
+.viewerCanvasWrap canvas { max-width:100%; height:auto; }

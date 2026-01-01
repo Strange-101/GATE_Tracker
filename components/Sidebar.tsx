@@ -78,8 +78,12 @@ const Sidebar = () => {
         {navItems.map((item) => (
           <button
             key={item.key}
-            onClick={() => item.key === 'subjects' ? setView('subjects') : setView('dashboard')}
-            className={`${styles.navItem} ${((item.key === 'subjects' && view === 'subjects') || (item.key === 'dashboard' && view === 'dashboard')) ? styles.active : ''}`}>
+            onClick={() => {
+              if (item.key === 'subjects') setView('subjects');
+              else if (item.key === 'notes') setView('notes');
+              else setView('dashboard');
+            }}
+            className={`${styles.navItem} ${((item.key === 'subjects' && view === 'subjects') || (item.key === 'dashboard' && view === 'dashboard') || (item.key === 'notes' && view === 'notes')) ? styles.active : ''}`}>
             {item.icon}
             <span>{item.label}</span>
           </button>
