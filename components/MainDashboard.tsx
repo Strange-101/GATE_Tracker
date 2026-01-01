@@ -32,21 +32,63 @@ const data = [
 ];
 
 const MainDashboard = () => {
-  const { subjects, tasks, overallProgress, view } = useApp();
-  const [notesContent, setNotesContent] = useState<string>('');
+  const { subjects, tasks, overallProgress, view, selectSubject } = useApp();
+  
+  // Aggregate all notes (links) and PDFs from all subjects/topics/subtopics
+  const allResources = React.useMemo(() => {
+    const resources: { 
+      id: string; 
+      name: string; 
+      type: 'Link' | 'PDF' | 'Video'; 
+      parentSubject: string; 
+      parentSubtopic: string;
+      subjectId: string;
+      url?: string;
+    }[] = [];
 
-  // Load saved notes from localStorage on mount
-  useEffect(() => {
-    const saved = localStorage.getItem('notesContent');
-    if (saved) {
-      setNotesContent(saved);
-    }
-  }, []);
-
-  // Save notes to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem('notesContent', notesContent);
-  }, [notesContent]);
+    subjects.forEach(s => {
+      s.topics.forEach(t => {
+        t.subtopics.forEach(st => {
+          // Add links
+          (st.links || []).forEach(l => {
+            resources.push({
+              id: l.id,
+              name: l.title,
+              type: 'Link',
+              parentSubject: s.name,
+              parentSubtopic: st.name,
+              subjectId: s.id,
+              url: l.url
+            });
+          });
+          // Add PDFs
+          (st.pdfs || []).forEach(p => {
+            resources.push({
+              id: p.id,
+              name: p.name,
+              type: 'PDF',
+              parentSubject: s.name,
+              parentSubtopic: st.name,
+              subjectId: s.id
+            });
+          });
+          // Add Videos
+          (st.videos || []).forEach(v => {
+            resources.push({
+              id: v.id,
+              name: v.name,
+              type: 'Video',
+              parentSubject: s.name,
+              parentSubtopic: st.name,
+              subjectId: s.id,
+              url: v.url
+            });
+          });
+        });
+      });
+    });
+    return resources.sort((a, b) => Number(b.id) - Number(a.id)); // Newest first (assuming ID is timestamp)
+  }, [subjects]);
 
   if (view === 'subjects') {
     return <main className={styles.main}><SubjectsList /></main>;
@@ -75,6 +117,7 @@ const MainDashboard = () => {
   return (
     <main className={styles.main}>
       <div className={styles.chartSection}>
+        {/* ... existing chart code ... */}
         <div className={styles.chartHeader}>
           <h3>Topic Progress Timeline</h3>
           <div className={styles.chartLegend}>
@@ -113,14 +156,40 @@ const MainDashboard = () => {
           <div className={styles.panelHeader}>
             <div className={styles.panelTitle}>
               <FileText size={18} />
-              <h3>Your Notes</h3>
+              <h3>Added Resources</h3>
             </div>
           </div>
-          <div className={styles.notesEditorContainer}>
-            <NotesEditor
-              initialContent={notesContent}
-              onChange={setNotesContent}
-            />
+          <div className={styles.resourceList}>
+            {allResources.length > 0 ? (
+              allResources.slice(0, 10).map(res => (
+                <div 
+                  key={res.id} 
+                  className={styles.noteCard}
+                  onClick={() => selectSubject(res.subjectId, 'notes')}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <h4>{res.name}</h4>
+                    <span className={styles.resType}>{res.type}</span>
+                  </div>
+                  <p>{res.parentSubject} • {res.parentSubtopic}</p>
+                  {res.type === 'Link' && (
+                    <a 
+                      href={res.url} 
+                      target="_blank" 
+                      rel="noreferrer" 
+                      style={{ fontSize: '0.7rem', color: 'var(--accent-blue)', textDecoration: 'none' }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      Open Link
+                    </a>
+                  )}
+                </div>
+              ))
+            ) : (
+              <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+                No resources added yet. Go to Subjects or Notes to add links and PDFs.
+              </div>
+            )}
           </div>
         </div>
 
@@ -153,8 +222,8 @@ const MainDashboard = () => {
           <div className={styles.lectureList}>
              {tasks.slice(0, 3).map(task => (
                 <div key={task.id} className={styles.taskMini}>
-                  <div className={styles.taskMiniTitle}>{task.title}</div>
-                  <div className={styles.taskMiniMeta}>{task.subject} • {task.dueDate}</div>
+                   <div className={styles.taskMiniTitle}>{task.title}</div>
+                   <div className={styles.taskMiniMeta}>{task.subject} • {task.dueDate}</div>
                 </div>
              ))}
           </div>

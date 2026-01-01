@@ -77,6 +77,34 @@
   margin-top: 1rem;
 }
 
+.resourceList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.resourceList::-webkit-scrollbar {
+  width: 4px;
+}
+
+.resourceList::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 2px;
+}
+
+.resType {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.2rem 0.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  text-transform: uppercase;
+}
+
 
 .noteCard {
   background-color: var(--bg-main);

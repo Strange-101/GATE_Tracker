@@ -1,7 +1,7 @@
 "use client"
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Subject, SYLLABUS, MOCK_TASKS, Link, PDFFile, VideoFile } from './data';
+import { Subject, SYLLABUS, MOCK_TASKS, Link, PDFFile, VideoFile, StudyLog } from './data';
 
 interface AppContextType {
   subjects: Subject[];
@@ -25,6 +25,8 @@ interface AppContextType {
   addVideo: (subjectId: string, topicId: string, subtopicId: string, video: VideoFile) => void;
   deleteVideo: (subjectId: string, topicId: string, subtopicId: string, videoId: string) => void;
   deleteSubtopic: (subjectId: string, topicId: string, subtopicId: string) => void;
+  studyLogs: StudyLog[];
+  addStudyLog: (log: Omit<StudyLog, 'id' | 'date'>) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -50,6 +52,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [studyTime, setStudyTime] = useState(0);
   const [view, setView] = useState<'dashboard' | 'subjects' | 'subjectDetail' | 'notes' | 'notesSubject' | 'lectures' | 'lecturesSubject'>('dashboard');
   const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
+  const [studyLogs, setStudyLogs] = useState<StudyLog[]>([]);
   // load persisted subjects (notes + user added content)
   useEffect(() => {
     try {
@@ -59,6 +62,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         // merge with default syllabus to ensure any missing fields exist
         setSubjects(parsed);
         setOverallProgress(calculateProgress(parsed));
+      }
+
+      const rawLogs = localStorage.getItem('app_study_logs_v1');
+      if (rawLogs) {
+        setStudyLogs(JSON.parse(rawLogs));
       }
     } catch (e) {
       // ignore
@@ -71,6 +79,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       localStorage.setItem('app_subjects_v1', JSON.stringify(subjects));
     } catch (e) {}
   }, [subjects]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('app_study_logs_v1', JSON.stringify(studyLogs));
+    } catch (e) {}
+  }, [studyLogs]);
 
   // Note: persistence (localStorage) intentionally disabled per feature requirements.
 
@@ -318,8 +332,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
+  const addStudyLog = (log: Omit<StudyLog, 'id' | 'date'>) => {
+    const newLog: StudyLog = {
+      ...log,
+      id: Date.now().toString(),
+      date: new Date().toISOString()
+    };
+    setStudyLogs(prev => [newLog, ...prev]);
+  };
+
   return (
-    <AppContext.Provider value={{ subjects, tasks, overallProgress, studyTime, addStudyTime, toggleSubtopic, view, setView, selectedSubjectId, selectSubject, addTopic, addSubtopic, addLink, addPDF, deletePDF, setPdfLastOpened, addVideo, deleteVideo, deleteSubtopic }}>
+    <AppContext.Provider value={{ subjects, tasks, overallProgress, studyTime, addStudyTime, toggleSubtopic, view, setView, selectedSubjectId, selectSubject, addTopic, addSubtopic, addLink, addPDF, deletePDF, setPdfLastOpened, addVideo, deleteVideo, deleteSubtopic, studyLogs, addStudyLog }}>
       {children}
     </AppContext.Provider>
   );
