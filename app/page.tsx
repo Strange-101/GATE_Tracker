@@ -1,6 +1,5 @@
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
-import RightSidebar from '@/components/RightSidebar';
 import MainDashboard from '@/components/MainDashboard';
 import styles from './page.module.css';
 
@@ -12,7 +11,7 @@ export default function Home() {
         <Header />
         <MainDashboard />
       </div>
-      <RightSidebar />
+      {/* RightSidebar removed */}
     </div>
   );
 }

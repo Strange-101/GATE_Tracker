@@ -1,7 +1,7 @@
 "use client"
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Subject, SYLLABUS, MOCK_TASKS } from './data';
+import { Subject, SYLLABUS, MOCK_TASKS, Link, PDFFile } from './data';
 
 interface AppContextType {
   subjects: Subject[];
@@ -11,10 +11,17 @@ interface AppContextType {
   addStudyTime: (seconds: number) => void;
   toggleSubtopic: (subjectId: string, topicId: string, subtopicId: string) => void;
   // navigation state
-  view: 'dashboard' | 'subjects' | 'subjectDetail';
-  setView: (v: 'dashboard' | 'subjects' | 'subjectDetail') => void;
+  view: 'dashboard' | 'subjects' | 'subjectDetail' | 'notes' | 'notesSubject';
+  setView: (v: 'dashboard' | 'subjects' | 'subjectDetail' | 'notes' | 'notesSubject') => void;
   selectedSubjectId?: string | null;
-  selectSubject: (id: string | null) => void;
+  selectSubject: (id: string | null, mode?: 'syllabus' | 'notes') => void;
+  // notes/topic modification
+  addTopic: (subjectId: string, topicName: string) => void;
+  addSubtopic: (subjectId: string, topicId: string, subtopicName: string) => void;
+  addLink: (subjectId: string, topicId: string, subtopicId: string, link: Link) => void;
+  addPDF: (subjectId: string, topicId: string, subtopicId: string, pdf: PDFFile) => void;
+  deletePDF: (subjectId: string, topicId: string, subtopicId: string, pdfId: string) => void;
+  setPdfLastOpened: (subjectId: string, topicId: string, subtopicId: string, pdfId: string, page: number) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -38,8 +45,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [overallProgress, setOverallProgress] = useState<number>(() => calculateProgress(SYLLABUS));
   const [studyTime, setStudyTime] = useState(0);
-  const [view, setView] = useState<'dashboard' | 'subjects' | 'subjectDetail'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'subjects' | 'subjectDetail' | 'notes' | 'notesSubject'>('dashboard');
   const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
+  // load persisted subjects (notes + user added content)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('app_subjects_v1');
+      if (raw) {
+        const parsed = JSON.parse(raw) as Subject[];
+        // merge with default syllabus to ensure any missing fields exist
+        setSubjects(parsed);
+        setOverallProgress(calculateProgress(parsed));
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, []);
+
+  // persist subjects whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem('app_subjects_v1', JSON.stringify(subjects));
+    } catch (e) {}
+  }, [subjects]);
 
   // Note: persistence (localStorage) intentionally disabled per feature requirements.
 
@@ -47,10 +75,135 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setStudyTime(prev => prev + seconds);
   };
 
-  const selectSubject = (id: string | null) => {
+  const selectSubject = (id: string | null, mode: 'syllabus' | 'notes' = 'syllabus') => {
     setSelectedSubjectId(id);
-    if (id) setView('subjectDetail');
-    else setView('subjects');
+    if (id) setView(mode === 'syllabus' ? 'subjectDetail' : 'notesSubject');
+    else setView(mode === 'syllabus' ? 'subjects' : 'notes');
+  };
+
+  const addTopic = (subjectId: string, topicName: string) => {
+    setSubjects(prev => {
+      const next = prev.map(s => {
+        if (s.id !== subjectId) return s;
+        const newTopic = { id: `${subjectId}-${Date.now()}`, name: topicName, subtopics: [] };
+        return { ...s, topics: [...s.topics, newTopic] };
+      });
+      setOverallProgress(calculateProgress(next));
+      return next;
+    });
+  };
+
+  const addSubtopic = (subjectId: string, topicId: string, subtopicName: string) => {
+    setSubjects(prev => {
+      const next = prev.map(s => {
+        if (s.id !== subjectId) return s;
+        return {
+          ...s,
+          topics: s.topics.map(t => {
+            if (t.id !== topicId) return t;
+            const newSub = { id: `${topicId}-${Date.now()}`, name: subtopicName, completed: false, weightage: 'Low' as const, revisionCount: 0, links: [], pdfs: [] };
+            return { ...t, subtopics: [...t.subtopics, newSub] };
+          })
+        };
+      });
+      setOverallProgress(calculateProgress(next));
+      return next;
+    });
+  };
+
+  const addLink = (subjectId: string, topicId: string, subtopicId: string, link: Link) => {
+    setSubjects(prev => {
+      const next = prev.map(s => {
+        if (s.id !== subjectId) return s;
+        return {
+          ...s,
+          topics: s.topics.map(t => {
+            if (t.id !== topicId) return t;
+            return {
+              ...t,
+              subtopics: t.subtopics.map(st => {
+                if (st.id !== subtopicId) return st;
+                const links = st.links ? [...st.links, link] : [link];
+                return { ...st, links };
+              })
+            };
+          })
+        };
+      });
+      setOverallProgress(calculateProgress(next));
+      return next;
+    });
+  };
+
+  const addPDF = (subjectId: string, topicId: string, subtopicId: string, pdf: PDFFile) => {
+    setSubjects(prev => {
+      const next = prev.map(s => {
+        if (s.id !== subjectId) return s;
+        return {
+          ...s,
+          topics: s.topics.map(t => {
+            if (t.id !== topicId) return t;
+            return {
+              ...t,
+              subtopics: t.subtopics.map(st => {
+                if (st.id !== subtopicId) return st;
+                const pdfs = st.pdfs ? [...st.pdfs, pdf] : [pdf];
+                return { ...st, pdfs };
+              })
+            };
+          })
+        };
+      });
+      setOverallProgress(calculateProgress(next));
+      return next;
+    });
+  };
+
+  const deletePDF = (subjectId: string, topicId: string, subtopicId: string, pdfId: string) => {
+    setSubjects(prev => {
+      const next = prev.map(s => {
+        if (s.id !== subjectId) return s;
+        return {
+          ...s,
+          topics: s.topics.map(t => {
+            if (t.id !== topicId) return t;
+            return {
+              ...t,
+              subtopics: t.subtopics.map(st => {
+                if (st.id !== subtopicId) return st;
+                const pdfs = (st.pdfs || []).filter(p => p.id !== pdfId);
+                return { ...st, pdfs };
+              })
+            };
+          })
+        };
+      });
+      setOverallProgress(calculateProgress(next));
+      return next;
+    });
+  };
+
+  const setPdfLastOpened = (subjectId: string, topicId: string, subtopicId: string, pdfId: string, page: number) => {
+    setSubjects(prev => {
+      const next = prev.map(s => {
+        if (s.id !== subjectId) return s;
+        return {
+          ...s,
+          topics: s.topics.map(t => {
+            if (t.id !== topicId) return t;
+            return {
+              ...t,
+              subtopics: t.subtopics.map(st => {
+                if (st.id !== subtopicId) return st;
+                const pdfs = (st.pdfs || []).map(p => p.id === pdfId ? { ...p, lastOpenedPage: page } : p);
+                return { ...st, pdfs };
+              })
+            };
+          })
+        };
+      });
+      return next;
+    });
   };
 
   
@@ -79,7 +232,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   return (
-    <AppContext.Provider value={{ subjects, tasks, overallProgress, studyTime, addStudyTime, toggleSubtopic, view, setView, selectedSubjectId, selectSubject }}>
+    <AppContext.Provider value={{ subjects, tasks, overallProgress, studyTime, addStudyTime, toggleSubtopic, view, setView, selectedSubjectId, selectSubject, addTopic, addSubtopic, addLink, addPDF, deletePDF, setPdfLastOpened }}>
       {children}
     </AppContext.Provider>
   );

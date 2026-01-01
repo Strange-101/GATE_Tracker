@@ -5,6 +5,8 @@ export interface Subtopic {
   weightage: 'High' | 'Medium' | 'Low';
   lastRevised?: Date;
   revisionCount: number;
+  links?: Link[];
+  pdfs?: PDFFile[];
 }
 
 export interface Topic {
@@ -18,6 +20,20 @@ export interface Subject {
   name: string;
   topics: Topic[];
   color: string;
+}
+
+export interface Link {
+  id: string;
+  title: string;
+  url: string;
+  type?: 'Lecture' | 'Blog' | 'Notes' | string;
+}
+
+export interface PDFFile {
+  id: string;
+  name: string;
+  dataUrl?: string; // base64 or object URL stored for persistence
+  lastOpenedPage?: number;
 }
 
 export const SYLLABUS: Subject[] = [

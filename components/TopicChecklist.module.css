@@ -58,3 +58,26 @@
 
 .subItemLabel { flex:1; color:var(--text); }
 
+/* Small utilities for checklist items */
+.checked { color: var(--accent-green); }
+.unchecked { color: var(--text-muted); }
+
+.revBadge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--accent-yellow);
+  background: rgba(234, 179, 8, 0.1);
+  padding: 0.1rem 0.3rem;
+  border-radius: 4px;
+  margin-left: 8px;
+}
+
+.weight {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  background: var(--bg-main);
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  margin-left: 8px;
+}
+
