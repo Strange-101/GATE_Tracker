@@ -4,6 +4,17 @@ import React, { useState, useRef, useEffect } from 'react';
 import styles from './Notes.module.css';
 import { useApp } from '@/lib/store';
 import PDFViewer from './PDFViewer';
+import { 
+  X, 
+  Plus, 
+  ExternalLink, 
+  Eye, 
+  Download, 
+  Trash2, 
+  FileText,
+  Link as LinkIcon,
+  File as FileIcon
+} from 'lucide-react';
 
 interface Props {
   subjectId: string;
@@ -35,7 +46,6 @@ const NotesModal: React.FC<Props> = ({ subjectId, topicId, subtopicId, onClose }
   const handleFile = async (f?: File) => {
     const file = f || (fileRef.current && fileRef.current.files && fileRef.current.files[0]);
     if (!file) return;
-    // Limit PDF size to avoid blowing up localStorage
     const maxBytes = 5 * 1024 * 1024; // 5MB
     if (file.size > maxBytes) {
       alert('PDF too large. Please upload files smaller than 5MB.');
@@ -52,7 +62,6 @@ const NotesModal: React.FC<Props> = ({ subjectId, topicId, subtopicId, onClose }
   const handleDeletePDF = (pdfId: string) => {
     const ok = confirm('Delete this PDF? This action cannot be undone.');
     if (!ok) return;
-    // if we are viewing this pdf, revoke its object URL
     if (viewPdfId === pdfId && viewPdfUrl) {
       try { URL.revokeObjectURL(viewPdfUrl); } catch(e) {}
       setViewPdfId(null);
@@ -69,65 +78,118 @@ const NotesModal: React.FC<Props> = ({ subjectId, topicId, subtopicId, onClose }
     };
   }, [viewPdfUrl]);
 
+  const handlePageChange = React.useCallback((page: number) => {
+    if (viewPdfId) {
+      setPdfLastOpened(subjectId, topicId, subtopicId, viewPdfId, page);
+    }
+  }, [subjectId, topicId, subtopicId, viewPdfId, setPdfLastOpened]);
+
   return (
     <div className={styles.modalBackdrop}>
       <div className={styles.modalCard}>
         <div className={styles.modalHeader}>
           <h3>{subject.name} • {topic.name} • {subtopic.name}</h3>
-          <button onClick={onClose}>Close</button>
+          <button className={styles.closeBtn} onClick={onClose}>
+            <X size={20} />
+          </button>
         </div>
 
         <div className={styles.modalBody}>
-          <section>
+          <section className={styles.section}>
             <h4>Links</h4>
             <div className={styles.formRow}>
-              <input placeholder="Title" value={title} onChange={e => setTitle(e.target.value)} />
-              <input placeholder="https://..." value={url} onChange={e => setUrl(e.target.value)} />
-              <select value={type} onChange={e => setType(e.target.value)}>
+              <input 
+                className={styles.input}
+                placeholder="Title" 
+                value={title} 
+                onChange={e => setTitle(e.target.value)} 
+              />
+              <input 
+                className={styles.input}
+                placeholder="https://..." 
+                value={url} 
+                onChange={e => setUrl(e.target.value)} 
+              />
+              <select 
+                className={styles.select}
+                value={type} 
+                onChange={e => setType(e.target.value)}
+              >
                 <option>Lecture</option>
                 <option>Blog</option>
                 <option>Notes</option>
               </select>
-              <button onClick={handleAddLink}>Add Link</button>
+              <button className={styles.addBtn} onClick={handleAddLink}>
+                <Plus size={18} />
+                Add
+              </button>
             </div>
 
-            <ul className={styles.linkList}>
+            <div className={styles.linkList}>
               {(subtopic.links || []).map(l => (
-                <li key={l.id}><a href={l.url} target="_blank" rel="noreferrer">{l.title}</a> <span>({l.type})</span></li>
+                <div key={l.id} className={styles.linkCard}>
+                  <div className={styles.cardTitle}>{l.title}</div>
+                  <div className={styles.cardMeta}>
+                    <span className={styles.tag}>{l.type}</span>
+                    <a href={l.url} target="_blank" rel="noreferrer" className={styles.iconBtn}>
+                      <ExternalLink size={16} />
+                    </a>
+                  </div>
+                </div>
               ))}
-            </ul>
+            </div>
           </section>
 
-          <section>
+          <section className={styles.section}>
             <h4>PDFs</h4>
-            <div className={styles.formRow}>
-              <input ref={fileRef} type="file" accept="application/pdf" />
-              <button onClick={() => handleFile()}>Upload PDF</button>
+            <div className={styles.formRow} style={{ gridTemplateColumns: '1fr auto' }}>
+              <input 
+                ref={fileRef} 
+                type="file" 
+                accept="application/pdf" 
+                className={styles.input}
+                onChange={() => handleFile()}
+              />
+              <button className={styles.addBtn} onClick={() => fileRef.current?.click()}>
+                <Plus size={18} />
+                Upload PDF
+              </button>
             </div>
 
-            <ul className={styles.pdfList}>
+            <div className={styles.pdfList}>
               {(subtopic.pdfs || []).map(p => (
-                <li key={p.id} className={styles.pdfRow}>
-                  <span>{p.name}</span>
-                  <div>
-                    <button onClick={async () => {
-                      // create object URL from dataUrl for reliable iframe rendering
-                      try {
-                        const blob = await (await fetch(p.dataUrl!)).blob();
-                        const url = URL.createObjectURL(blob);
-                        setViewPdfId(p.id);
-                        setViewPdfUrl(url);
-                      } catch (e) {
-                        console.error('Failed to prepare PDF for viewing', e);
-                        alert('Unable to open PDF');
-                      }
-                    }}>View</button>
-                    <a href={p.dataUrl} download={p.name}><button>Download</button></a>
-                    <button onClick={() => handleDeletePDF(p.id)}>Delete</button>
+                <div key={p.id} className={styles.pdfCard}>
+                  <div className={styles.cardTitle}>{p.name}</div>
+                  <div className={styles.cardActions}>
+                    <button 
+                      className={styles.iconBtn}
+                      onClick={async () => {
+                        try {
+                          const blob = await (await fetch(p.dataUrl!)).blob();
+                          const url = URL.createObjectURL(blob);
+                          setViewPdfId(p.id);
+                          setViewPdfUrl(url);
+                        } catch (e) {
+                          console.error('Failed to prepare PDF for viewing', e);
+                          alert('Unable to open PDF');
+                        }
+                      }}
+                    >
+                      <Eye size={16} />
+                    </button>
+                    <a href={p.dataUrl} download={p.name} className={styles.iconBtn}>
+                      <Download size={16} />
+                    </a>
+                    <button 
+                      className={`${styles.iconBtn} ${styles.deleteBtn}`}
+                      onClick={() => handleDeletePDF(p.id)}
+                    >
+                      <Trash2 size={16} />
+                    </button>
                   </div>
-                </li>
+                </div>
               ))}
-            </ul>
+            </div>
           </section>
 
           {viewPdfUrl && viewPdfId && (
@@ -139,7 +201,7 @@ const NotesModal: React.FC<Props> = ({ subjectId, topicId, subtopicId, onClose }
                   setViewPdfUrl(null);
                   setViewPdfId(null);
                 }}
-                onPageChange={(page) => setPdfLastOpened(subjectId, topicId, subtopicId, viewPdfId, page)}
+                onPageChange={handlePageChange}
                 initialPage={(subtopic.pdfs || []).find(pp => pp.id === viewPdfId)!.lastOpenedPage || 1}
               />
             </div>
