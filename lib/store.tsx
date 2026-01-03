@@ -1,18 +1,23 @@
 "use client"
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Subject, SYLLABUS, MOCK_TASKS, Link, PDFFile, VideoFile, StudyLog } from './data';
-
-interface AppContextType {
-  subjects: Subject[];
-  tasks: any[];
-  overallProgress: number;
-  studyTime: number; // in seconds
-  addStudyTime: (seconds: number) => void;
-  toggleSubtopic: (subjectId: string, topicId: string, subtopicId: string) => void;
-  // navigation state
-  view: 'dashboard' | 'subjects' | 'subjectDetail' | 'notes' | 'notesSubject' | 'lectures' | 'lecturesSubject' | 'tracking';
-  setView: (v: 'dashboard' | 'subjects' | 'subjectDetail' | 'notes' | 'notesSubject' | 'lectures' | 'lecturesSubject' | 'tracking') => void;
+import { Subject, SYLLABUS, MOCK_TASKS, Link, PDFFile, VideoFile, StudyLog, Task } from './data';
+ 
+ interface AppContextType {
+   subjects: Subject[];
+   tasks: Task[];
+  taskSortBy: 'Date' | 'Priority';
+  setTaskSortBy: (sort: 'Date' | 'Priority') => void;
+   addTask: (task: Omit<Task, 'id' | 'completed'>) => void;
+   toggleTask: (taskId: string) => void;
+   deleteTask: (taskId: string) => void;
+   overallProgress: number;
+   studyTime: number; // in seconds
+   addStudyTime: (seconds: number) => void;
+   toggleSubtopic: (subjectId: string, topicId: string, subtopicId: string) => void;
+   // navigation state
+   view: 'dashboard' | 'subjects' | 'subjectDetail' | 'notes' | 'notesSubject' | 'lectures' | 'lecturesSubject' | 'tracking' | 'tasks';
+   setView: (v: 'dashboard' | 'subjects' | 'subjectDetail' | 'notes' | 'notesSubject' | 'lectures' | 'lecturesSubject' | 'tracking' | 'tasks') => void;
   selectedSubjectId?: string | null;
   selectSubject: (id: string | null, mode?: 'syllabus' | 'notes' | 'lectures') => void;
   // notes/topic modification
@@ -34,7 +39,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [subjects, setSubjects] = useState<Subject[]>(SYLLABUS);
-  const [tasks, setTasks] = useState(MOCK_TASKS);
+  const [tasks, setTasks] = useState<Task[]>(MOCK_TASKS);
   const calculateProgress = (currentSubjects: Subject[]) => {
     let total = 0;
     let completed = 0;
@@ -51,9 +56,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [overallProgress, setOverallProgress] = useState<number>(() => calculateProgress(SYLLABUS));
   const [studyTime, setStudyTime] = useState(0);
-  const [view, setView] = useState<'dashboard' | 'subjects' | 'subjectDetail' | 'notes' | 'notesSubject' | 'lectures' | 'lecturesSubject' | 'tracking'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'subjects' | 'subjectDetail' | 'notes' | 'notesSubject' | 'lectures' | 'lecturesSubject' | 'tracking' | 'tasks'>('dashboard');
   const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
   const [studyLogs, setStudyLogs] = useState<StudyLog[]>([]);
+  const [taskSortBy, setTaskSortBy] = useState<'Date' | 'Priority'>('Date');
   // load persisted subjects (notes + user added content)
   useEffect(() => {
     try {
@@ -68,6 +74,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const rawLogs = localStorage.getItem('app_study_logs_v1');
       if (rawLogs) {
         setStudyLogs(JSON.parse(rawLogs));
+      }
+
+      const rawTasks = localStorage.getItem('app_tasks_v1');
+      if (rawTasks) {
+        setTasks(JSON.parse(rawTasks));
+      }
+
+      const rawSort = localStorage.getItem('app_task_sort_v1');
+      if (rawSort) {
+        setTaskSortBy(rawSort as 'Date' | 'Priority');
       }
     } catch (e) {
       // ignore
@@ -86,6 +102,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       localStorage.setItem('app_study_logs_v1', JSON.stringify(studyLogs));
     } catch (e) {}
   }, [studyLogs]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('app_tasks_v1', JSON.stringify(tasks));
+    } catch (e) {}
+  }, [tasks]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('app_task_sort_v1', taskSortBy);
+    } catch (e) {}
+  }, [taskSortBy]);
 
   // Note: persistence (localStorage) intentionally disabled per feature requirements.
 
@@ -346,8 +374,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setStudyLogs(prev => prev.filter(log => log.id !== id));
   };
 
+  const addTask = (task: Omit<Task, 'id' | 'completed'>) => {
+    const newTask: Task = {
+      ...task,
+      id: Date.now().toString(),
+      completed: false
+    };
+    setTasks(prev => [newTask, ...prev]);
+  };
+
+  const toggleTask = (taskId: string) => {
+    setTasks(prev => prev.map(t => t.id === taskId ? { ...t, completed: !t.completed } : t));
+  };
+
+  const deleteTask = (taskId: string) => {
+    setTasks(prev => prev.filter(t => t.id !== taskId));
+  };
+
   return (
-    <AppContext.Provider value={{ subjects, tasks, overallProgress, studyTime, addStudyTime, toggleSubtopic, view, setView, selectedSubjectId, selectSubject, addTopic, addSubtopic, addLink, addPDF, deletePDF, setPdfLastOpened, addVideo, deleteVideo, deleteSubtopic, studyLogs, addStudyLog, deleteStudyLog }}>
+    <AppContext.Provider value={{ subjects, tasks, taskSortBy, setTaskSortBy, addTask, toggleTask, deleteTask, overallProgress, studyTime, addStudyTime, toggleSubtopic, view, setView, selectedSubjectId, selectSubject, addTopic, addSubtopic, addLink, addPDF, deletePDF, setPdfLastOpened, addVideo, deleteVideo, deleteSubtopic, studyLogs, addStudyLog, deleteStudyLog }}>
       {children}
     </AppContext.Provider>
   );

@@ -59,6 +59,16 @@ export interface StudyLog {
   notes?: string;
 }
 
+export interface Task {
+  id: string;
+  title: string;
+  subject: string;
+  dueDate: string;
+  priority: 'High' | 'Medium' | 'Low';
+  type: string;
+  completed: boolean;
+}
+
 export const SYLLABUS: Subject[] = [
   {
     id: 'em',
@@ -364,8 +374,8 @@ export const SYLLABUS: Subject[] = [
   },
 ];
 
-export const MOCK_TASKS = [
-  { id: 't1', title: 'Revise Deadlocks', subject: 'OS', dueDate: 'Today', priority: 'High', type: 'Revision' },
-  { id: 't2', title: 'Solve Array PYQs', subject: 'DS', dueDate: 'Tomorrow', priority: 'Medium', type: 'PYQ' },
-  { id: 't3', title: 'Watch TCP Lecture', subject: 'CN', dueDate: 'Dec 25', priority: 'Low', type: 'Lecture' },
+export const MOCK_TASKS: Task[] = [
+  { id: 't1', title: 'Revise Deadlocks', subject: 'OS', dueDate: 'Today', priority: 'High', type: 'Revision', completed: false },
+  { id: 't2', title: 'Solve Array PYQs', subject: 'DS', dueDate: 'Tomorrow', priority: 'Medium', type: 'PYQ', completed: false },
+  { id: 't3', title: 'Watch TCP Lecture', subject: 'CN', dueDate: 'Dec 25', priority: 'Low', type: 'Lecture', completed: false },
 ];
