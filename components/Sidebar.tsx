@@ -77,21 +77,32 @@ const Sidebar = () => {
       </div>
 
       <nav className={styles.nav}>
-        {navItems.map((item) => (
-          <button
-            key={item.key}
-            onClick={() => {
-              if (item.key === 'subjects') setView('subjects');
-              else if (item.key === 'notes') setView('notes');
-              else if (item.key === 'lectures') setView('lectures');
-              else if (item.key === 'tracking') setView('tracking');
-              else setView('dashboard');
-            }}
-            className={`${styles.navItem} ${((item.key === 'subjects' && view === 'subjects') || (item.key === 'dashboard' && view === 'dashboard') || (item.key === 'notes' && view === 'notes') || (item.key === 'lectures' && view === 'lectures') || (item.key === 'tracking' && view === 'tracking')) ? styles.active : ''}`}>
-            {item.icon}
-            <span>{item.label}</span>
-          </button>
-        ))}
+        {navItems.map((item) => {
+          const isActive = 
+            (item.key === 'dashboard' && view === 'dashboard') ||
+            (item.key === 'subjects' && (view === 'subjects' || view === 'subjectDetail')) ||
+            (item.key === 'notes' && (view === 'notes' || view === 'notesSubject')) ||
+            (item.key === 'lectures' && (view === 'lectures' || view === 'lecturesSubject')) ||
+            (item.key === 'tracking' && view === 'tracking') ||
+            (item.key === 'tasks' && view === 'tasks');
+
+          return (
+            <button
+              key={item.key}
+              onClick={() => {
+                if (item.key === 'subjects') setView('subjects');
+                else if (item.key === 'notes') setView('notes');
+                else if (item.key === 'lectures') setView('lectures');
+                else if (item.key === 'tracking') setView('tracking');
+                else if (item.key === 'tasks') setView('tasks');
+                else setView('dashboard');
+              }}
+              className={`${styles.navItem} ${isActive ? styles.active : ''}`}>
+              {item.icon}
+              <span>{item.label}</span>
+            </button>
+          );
+        })}
       </nav>
 
       <div className={styles.timerWrapper}>

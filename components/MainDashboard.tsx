@@ -22,11 +22,12 @@ import SubjectNotesView from './SubjectNotesView';
 import LecturesView from './LecturesView';
 import SubjectLecturesView from './SubjectLecturesView';
 import ConsistencyTrackingView from './ConsistencyTrackingView';
+import TasksView from './TasksView';
 
 // Static data removed for dynamic generation
 
 const MainDashboard = () => {
-  const { subjects, tasks, overallProgress, view, selectSubject, studyLogs } = useApp();
+  const { subjects, tasks, overallProgress, view, setView, selectSubject, studyLogs, taskSortBy } = useApp();
   
   // Aggregate all notes (links) and PDFs from all subjects/topics/subtopics
   const allResources = React.useMemo(() => {
@@ -113,6 +114,21 @@ const MainDashboard = () => {
     return timeline;
   }, [studyLogs, subjects]);
 
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return '';
+    if (dateStr === 'Today' || dateStr === 'Tomorrow' || isNaN(Date.parse(dateStr))) return dateStr;
+    const date = new Date(dateStr);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dateClone = new Date(date);
+    dateClone.setHours(0, 0, 0, 0);
+    if (dateClone.getTime() === today.getTime()) return 'Today';
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+    if (dateClone.getTime() === tomorrow.getTime()) return 'Tomorrow';
+    return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+  };
+
   if (view === 'subjects') {
     return <main className={styles.main}><SubjectsList /></main>;
   }
@@ -139,6 +155,10 @@ const MainDashboard = () => {
 
   if (view === 'tracking') {
     return <main className={styles.main}><ConsistencyTrackingView /></main>;
+  }
+
+  if (view === 'tasks') {
+    return <main className={styles.main}><TasksView /></main>;
   }
 
   return (
@@ -279,14 +299,55 @@ const MainDashboard = () => {
         <div className={styles.lecturePanel}>
           <div className={styles.panelHeader}>
              <h3>Pending Tasks</h3>
+             <button 
+               onClick={() => setView('tasks')}
+               style={{ background: 'none', border: 'none', color: 'var(--accent-blue)', fontSize: '0.75rem', cursor: 'pointer' }}
+             >
+               View All
+             </button>
           </div>
           <div className={styles.lectureList}>
-             {tasks.slice(0, 3).map(task => (
-                <div key={task.id} className={styles.taskMini}>
-                   <div className={styles.taskMiniTitle}>{task.title}</div>
-                   <div className={styles.taskMiniMeta}>{task.subject} • {task.dueDate}</div>
-                </div>
-             ))}
+             {tasks.filter(t => !t.completed).length > 0 ? (
+               tasks.filter(t => !t.completed)
+                 .sort((a, b) => {
+                   const priorityWeight = { 'High': 3, 'Medium': 2, 'Low': 1 };
+                   
+                   if (taskSortBy === 'Priority') {
+                     const weightA = priorityWeight[a.priority as keyof typeof priorityWeight] || 0;
+                     const weightB = priorityWeight[b.priority as keyof typeof priorityWeight] || 0;
+                     if (weightA !== weightB) return weightB - weightA;
+                   }
+
+                   const parseDate = (d: string) => {
+                     if (!d) return Infinity;
+                     if (d === 'Today') return new Date().setHours(0,0,0,0);
+                     if (d === 'Tomorrow') return new Date().setHours(0,0,0,0) + 86400000;
+                     const p = Date.parse(d);
+                     return isNaN(p) ? Infinity : p;
+                   };
+
+                   const dateA = parseDate(a.dueDate);
+                   const dateB = parseDate(b.dueDate);
+                   return dateA - dateB;
+                 })
+                 .slice(0, 5).map(task => (
+                  <div 
+                    key={task.id} 
+                    className={styles.taskMini}
+                    style={{ cursor: 'pointer', borderLeft: `3px solid ${subjects.find(s => s.id === task.subject)?.color || 'var(--border-color)'}` }}
+                    onClick={() => setView('tasks')}
+                  >
+                     <div className={styles.taskMiniTitle}>{task.title}</div>
+                     <div className={styles.taskMiniMeta}>
+                       {subjects.find(s => s.id === task.subject)?.name || task.subject} • {formatDate(task.dueDate)}
+                     </div>
+                  </div>
+               ))
+             ) : (
+               <div style={{ padding: '1.5rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+                 All tasks completed! 🎉
+               </div>
+             )}
           </div>
         </div>
       </div>
